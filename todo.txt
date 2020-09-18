@@ -4,3 +4,5 @@
 - 1 big sum of both
 
 2. Update icons, they look half-assed and silly
+
+3. Add death note option to encourage player to shoot specific guildies.
