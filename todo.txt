@@ -1,0 +1,6 @@
+1. Add counters to show the exact number of hazards:
+- 1 small number for polied
+- 1 small for FF
+- 1 big sum of both
+
+2. Update icons, they look half-assed and silly

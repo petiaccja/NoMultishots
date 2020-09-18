@@ -1,0 +1,11 @@
+## Interface: 11305 
+## Title: NoMultishots
+## Notes: A small AddOn that tell you when NOT to Multi-Shot, or Chain Lightning, or... you name it.
+## SavedVariables: g_noMultishotsConfig
+## Version: 1.0
+Data.lua
+WarningFrame.lua
+CombatLogTracker.lua
+UnitTracker.lua
+Options.lua
+NoMultishots.lua
