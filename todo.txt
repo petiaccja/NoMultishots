@@ -3,8 +3,6 @@
 - 1 small for FF
 - 1 big sum of both
 
-2. Update icons, they look half-assed and silly
+2. Add death note option to encourage player to shoot specific guildies.
 
-3. Add death note option to encourage player to shoot specific guildies.
-
-4. Add a "silence" button that hides the warning if stuck due to long spells etc.
+3. Add a "silence" button that hides the warning if stuck due to long spells etc.

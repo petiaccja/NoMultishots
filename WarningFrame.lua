@@ -33,6 +33,7 @@ function nms_WarningFrame:SetOptions(options)
     self.movable = options.enableMove
 
     displayFrame:SetAlpha(options.alpha)
+    displayFrame:SetSize(options.size, options.size)
     displayFrame:ClearAllPoints()
     local uiScale = UIParent:GetEffectiveScale()
     displayFrame:SetPoint("CENTER", UIParent, "CENTER", options.positionX*uiScale, options.positionY*uiScale)

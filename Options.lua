@@ -5,10 +5,6 @@ local variablesLoadedFrame = CreateFrame("Frame", "nms_VarsLoaded", UIParent)
 variablesLoadedFrame:SetScript("OnEvent", function () nms_Options:VariablesLoaded() end)
 variablesLoadedFrame:RegisterEvent("VARIABLES_LOADED")
 
-local PrintOptions = function (options)
-    print(options.enableMove, options.alpha, options.positionX, options.positionY)    
-end
-
 local Round = function (arg)
     return math.floor(arg + 0.5)
 end
@@ -51,6 +47,7 @@ function nms_Options:Defaults()
     options.positionX = 0
     options.positionY = 0
     options.alpha = 0.6
+    options.size = 128
     return options
 end
 
@@ -68,6 +65,9 @@ function nms_Options:Verify(options)
     if type(options.alpha) ~= "number" then
         return false
     end
+    if type(options.size) ~= "number" then
+        return false
+    end
     return true
 end
 
@@ -75,10 +75,13 @@ end
 function nms_Options:WritePanel(options)
     self.panel.enableMove:SetChecked(options.enableMove)
     self.panel.alphaSlider:SetValue(options.alpha)
-    self.panel.coordX:SetText("999")
-    self.panel.coordY:SetText("999")
-    self.panel.coordX:SetText(tostring(Round(options.positionX)))
-    self.panel.coordY:SetText(tostring(Round(options.positionY)))
+    self.panel.coordX:SetNumber(Round(options.positionX))
+    self.panel.coordY:SetNumber(Round(options.positionY))
+    self.panel.size:SetNumber(Round(options.size))
+
+    self.panel.coordX:SetCursorPosition(0)
+    self.panel.coordY:SetCursorPosition(0)
+    self.panel.size:SetCursorPosition(0)
 end
 
 
@@ -86,8 +89,9 @@ function nms_Options:ReadPanel()
     local options = {}
     options.enableMove = self.panel.enableMove:GetChecked()
     options.alpha = self.panel.alphaSlider:GetValue()
-    options.positionX = tonumber(self.panel.coordX:GetText())
-    options.positionY = tonumber(self.panel.coordY:GetText())
+    options.positionX = self.panel.coordX:GetNumber()
+    options.positionY = self.panel.coordY:GetNumber()
+    options.size = self.panel.size:GetNumber()
     return options
 end
 
@@ -111,6 +115,8 @@ function nms_Options:CreatePanel()
     panel.coordX = self:CreateEditBox("EditCoordX", panel.frame, "X", 60, 25, function() self:Update() end)
     panel.coordY = self:CreateEditBox("EditCoordY", panel.frame, "Y", 60, 25, function() self:Update() end)
     panel.resetCoords = self:CreateButton("ResetCoords", panel.frame, "Reset", 60, 25)
+    panel.labelSize = self:CreateLabel(panel.frame, "Frame size:", 12)
+    panel.size = self:CreateEditBox("EditSize", panel.frame, "", 60, 25, function () self:Update() end)
     
     panel.enableMove:SetPoint("TOPLEFT", panel.frame, "TOPLEFT", 15, -15)
     panel.alphaSlider:SetPoint("TOPLEFT", panel.enableMove, "BOTTOMLEFT", 0, -15)
@@ -118,6 +124,14 @@ function nms_Options:CreatePanel()
     panel.coordX:SetPoint("LEFT", panel.labelCoord, "RIGHT", 10, 0)
     panel.coordY:SetPoint("LEFT", panel.coordX, "RIGHT", 10, 0)
     panel.resetCoords:SetPoint("LEFT", panel.coordY, "RIGHT", 10, 0)
+    panel.labelSize:SetPoint("TOPLEFT", panel.labelCoord, "BOTTOMLEFT", 0, -20)
+    panel.size:SetPoint("LEFT", panel.labelSize, "RIGHT", 10, 0)
+
+    panel.coordX:SetNumeric()
+    panel.coordY:SetNumeric()
+    panel.size:SetNumeric()
+
+    panel.alphaSlider.tooltip = "Set to zero if you don't want any displays."
 
     return panel
 end
@@ -132,14 +146,18 @@ end
 function nms_Options:RegisterScripts()
     nms_WarningFrame:SetMoveCallback(function ()
         local x, y = nms_WarningFrame:GetFramePosition()
-        self.panel.coordX:SetText(tostring(Round(x)))
-        self.panel.coordY:SetText(tostring(Round(y)))
+        self.panel.coordX:SetNumber(Round(x))
+        self.panel.coordY:SetNumber(Round(y))
+        self.panel.coordX:SetCursorPosition(0)
+        self.panel.coordY:SetCursorPosition(0)
         self:Update()
     end)
     self.panel.resetCoords:SetScript("OnClick", function ()
         local x, y = 0, 0
-        self.panel.coordX:SetText(tostring(Round(x)))
-        self.panel.coordY:SetText(tostring(Round(y)))
+        self.panel.coordX:SetNumber(Round(x))
+        self.panel.coordY:SetNumber(Round(y))
+        self.panel.coordX:SetCursorPosition(0)
+        self.panel.coordY:SetCursorPosition(0)
         self:Update()
     end)
 end
@@ -157,9 +175,6 @@ end
 
 function nms_Options:CreateButton(name, parent, title, width, height)
     local control = CreateFrame("Button", "nms_" .. name, parent)
-    control:SetNormalTexture('Interface/Buttons/UI-Panel-Button-Up')
-    control:SetHighlightTexture("Interface/Buttons/UI-Panel-Button-Highlight")
-    control:SetPushedTexture("Interface/Buttons/UI-Panel-Button-Down")
     local font = control:CreateFontString()
 	font:SetFont("Fonts/FRIZQT__.TTF", 12)
 	font:SetPoint("CENTER", control, "CENTER", 0, 0)
@@ -168,6 +183,9 @@ function nms_Options:CreateButton(name, parent, title, width, height)
     control:SetFontString(font)
     control:SetText(title)
     control:SetSize(width, height)
+    control:SetNormalTexture('Interface/Buttons/UI-Panel-Button-Up')
+    control:SetHighlightTexture("Interface/Buttons/UI-Panel-Button-Highlight")
+    control:SetPushedTexture("Interface/Buttons/UI-Panel-Button-Down")
     return control
 end
 
@@ -211,7 +229,7 @@ function nms_Options:CreateEditBox(name, parent, title, width, height, onEnterCa
     control:SetSize(width, height)
     control:SetMultiLine(false)
     control:SetAutoFocus(false)
-    control:SetMaxLetters(4)
+    control:SetMaxLetters(6)
     control:SetJustifyH("CENTER")
     control:SetJustifyV("CENTER")
     control:SetFontObject(GameFontNormal)
