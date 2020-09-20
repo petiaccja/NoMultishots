@@ -7,10 +7,10 @@ local unitState = NMS_WARNING_NONE
 local unitEffect = NMS_EFFECT_NONE
 local displayFrame = nil
 
-local texFileWarnPoly = "Interface/Addons/NoMultishots/images/warn_poly.blp"
-local texFileWarnFF = "Interface/Addons/NoMultishots/images/warn_ff.blp"
-local texFileBlockPoly = "Interface/Addons/NoMultishots/images/block_poly.blp"
-local texFileBlockFF = "Interface/Addons/NoMultishots/images/block_ff.blp"
+local texFileWarnPoly = "Interface/Addons/NoMultishots/images/warn_sheep.blp"
+local texFileWarnFF = "Interface/Addons/NoMultishots/images/warn_friend.blp"
+local texFileBlockPoly = "Interface/Addons/NoMultishots/images/block_sheep.blp"
+local texFileBlockFF = "Interface/Addons/NoMultishots/images/block_friend.blp"
 local texChecker = "Interface/Addons/NoMultishots/images/checker.blp"
 
 

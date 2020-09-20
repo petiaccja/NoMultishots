@@ -6,3 +6,5 @@
 2. Update icons, they look half-assed and silly
 
 3. Add death note option to encourage player to shoot specific guildies.
+
+4. Add a "silence" button that hides the warning if stuck due to long spells etc.
