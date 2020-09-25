@@ -32,10 +32,8 @@ function nms_Options:VariablesLoaded()
 
     local charName = UnitName("player")
     local options = g_noMultishotsConfig[charName]
-    if not self:Verify(options) then
-        options = self:Defaults()
-        g_noMultishotsConfig[charName] = options
-    end
+    options = self:Verify(options)
+    g_noMultishotsConfig[charName] = options
     self:WritePanel(options)
     nms_WarningFrame:SetOptions(options)
 end
@@ -48,27 +46,25 @@ function nms_Options:Defaults()
     options.positionY = 0
     options.alpha = 0.6
     options.size = 128
+    options.showCounts = true
+    options.countAlignment = "BOTTOM"
     return options
 end
 
 
 function nms_Options:Verify(options)
+    local defaults = self:Defaults()
+
     if not options then
-        return false
+        return defaults
     end
-    if type(options.positionX) ~= "number" then
-        return false
+
+    for k,v in pairs(defaults) do
+        if options[k] == nil or type(options[k]) ~= type(v) then
+            options[k] = v
+        end
     end
-    if type(options.positionY) ~= "number" then
-        return false
-    end
-    if type(options.alpha) ~= "number" then
-        return false
-    end
-    if type(options.size) ~= "number" then
-        return false
-    end
-    return true
+    return options
 end
 
 
@@ -82,6 +78,11 @@ function nms_Options:WritePanel(options)
     self.panel.coordX:SetCursorPosition(0)
     self.panel.coordY:SetCursorPosition(0)
     self.panel.size:SetCursorPosition(0)
+
+    self.panel.showCounts:SetChecked(options.showCounts)
+    local alignStr = string.lower(options.countAlignment)
+    alignStr = alignStr:sub(1,1):upper() .. alignStr:sub(2)
+    UIDropDownMenu_SetText(self.panel.countAlignment, alignStr)
 end
 
 
@@ -92,6 +93,8 @@ function nms_Options:ReadPanel()
     options.positionX = self.panel.coordX:GetNumber()
     options.positionY = self.panel.coordY:GetNumber()
     options.size = self.panel.size:GetNumber()
+    options.showCounts = self.panel.showCounts:GetChecked()
+    options.countAlignment = string.upper(UIDropDownMenu_GetText(self.panel.countAlignment))
     return options
 end
 
@@ -109,14 +112,22 @@ function nms_Options:CreatePanel()
 
     panel.frame = CreateFrame("Frame", "nms_OptionsFrame")
 
-    panel.enableMove = self:CreateCheckButton("EnableMove", panel.frame, "Unlock frame", "Check this to make the warning frame draggable with the mouse.")
-    panel.alphaSlider = self:CreateSlider("AlphaSlider", panel.frame, "Frame alpha")
-    panel.labelCoord = self:CreateLabel(panel.frame, "Frame coordinates:", 12)
-    panel.coordX = self:CreateEditBox("EditCoordX", panel.frame, "X", 60, 25, function() self:Update() end)
-    panel.coordY = self:CreateEditBox("EditCoordY", panel.frame, "Y", 60, 25, function() self:Update() end)
-    panel.resetCoords = self:CreateButton("ResetCoords", panel.frame, "Reset", 60, 25)
-    panel.labelSize = self:CreateLabel(panel.frame, "Frame size:", 12)
-    panel.size = self:CreateEditBox("EditSize", panel.frame, "", 60, 25, function () self:Update() end)
+    panel.enableMove = nms_Interface:CreateCheckButton("EnableMove", panel.frame, "Unlock frame", "Check this to make the warning frame draggable with the mouse.")
+    panel.alphaSlider = nms_Interface:CreateSlider("AlphaSlider", panel.frame, "Frame alpha")
+
+    panel.labelCoord = nms_Interface:CreateLabel(panel.frame, "Frame coordinates:", 12)
+    panel.coordX = nms_Interface:CreateEditBox("EditCoordX", panel.frame, "X", 60, 25, function() self:Update() end)
+    panel.coordY = nms_Interface:CreateEditBox("EditCoordY", panel.frame, "Y", 60, 25, function() self:Update() end)
+    panel.resetCoords = nms_Interface:CreateButton("ResetCoords", panel.frame, "Reset", 60, 25)
+
+    panel.labelSize = nms_Interface:CreateLabel(panel.frame, "Frame size:", 12)
+    panel.size = nms_Interface:CreateEditBox("EditSize", panel.frame, "", 60, 25, function () self:Update() end)
+
+    panel.showCounts = nms_Interface:CreateCheckButton("ShowCounts", panel.frame, "Show number of hazards")
+    panel.countAlignment = nms_Interface:CreateDropdownMenu("CountAlignment", panel.frame, 85, 25, {"Bottom", "Top", "Left", "Right"}, function (info, control, key, checked)
+        UIDropDownMenu_SetSelectedValue(control, info.value, info.value)
+        self:Update()
+    end)
     
     panel.enableMove:SetPoint("TOPLEFT", panel.frame, "TOPLEFT", 15, -15)
     panel.alphaSlider:SetPoint("TOPLEFT", panel.enableMove, "BOTTOMLEFT", 0, -15)
@@ -126,6 +137,8 @@ function nms_Options:CreatePanel()
     panel.resetCoords:SetPoint("LEFT", panel.coordY, "RIGHT", 10, 0)
     panel.labelSize:SetPoint("TOPLEFT", panel.labelCoord, "BOTTOMLEFT", 0, -20)
     panel.size:SetPoint("LEFT", panel.labelSize, "RIGHT", 10, 0)
+    panel.showCounts:SetPoint("TOPLEFT", panel.labelSize, "BOTTOMLEFT", 0, -15)
+    panel.countAlignment:SetPoint("LEFT", panel.showCounts, "RIGHT", 135, 0)
 
     panel.coordX:SetNumeric()
     panel.coordY:SetNumeric()
@@ -140,6 +153,7 @@ end
 function nms_Options:RegisterUpdateTriggers()
     self.panel.enableMove:SetScript("OnClick", function () self:Update() end)
     self.panel.alphaSlider:SetScript("OnMouseUp", function () self:Update() end)
+    self.panel.showCounts:SetScript("OnClick", function () self:Update() end)
 end
 
 
@@ -160,86 +174,4 @@ function nms_Options:RegisterScripts()
         self.panel.coordY:SetCursorPosition(0)
         self:Update()
     end)
-end
-
-
-function nms_Options:CreateLabel(parent, text, size)
-    local control = parent:CreateFontString(nil, "ARTWORK")
-    control:SetFont("Fonts/FRIZQT__.ttf", size)
-    control:SetJustifyV("CENTER")
-    control:SetJustifyH("CENTER")
-    control:SetText(text)
-    return control
-end
-
-
-function nms_Options:CreateButton(name, parent, title, width, height)
-    local control = CreateFrame("Button", "nms_" .. name, parent)
-    local font = control:CreateFontString()
-	font:SetFont("Fonts/FRIZQT__.TTF", 12)
-	font:SetPoint("CENTER", control, "CENTER", 0, 0)
-    font:SetJustifyV("CENTER")
-    font:SetJustifyH("CENTER")
-    control:SetFontString(font)
-    control:SetText(title)
-    control:SetSize(width, height)
-    control:SetNormalTexture('Interface/Buttons/UI-Panel-Button-Up')
-    control:SetHighlightTexture("Interface/Buttons/UI-Panel-Button-Highlight")
-    control:SetPushedTexture("Interface/Buttons/UI-Panel-Button-Down")
-    return control
-end
-
-
-function nms_Options:CreateCheckButton(name, parent, title, hint)
-    local control = CreateFrame("CheckButton", "nms_" .. name, parent, "ChatConfigCheckButtonTemplate")
-    control:SetChecked(false)
-    getglobal(control:GetName() .. 'Text'):SetText(title);
-    if hint then
-        control.tooltip = hint
-    end
-    return control
-end
-
-
-function nms_Options:CreateSlider(name, parent, title)
-    local control = CreateFrame("Slider", "nms_" .. name, parent, "OptionsSliderTemplate")
-    control:SetOrientation('HORIZONTAL')
-    control:SetMinMaxValues(0, 1)
-    control:SetValue(0.5)
-    getglobal(control:GetName() .. "Low"):SetText("0.0")
-    getglobal(control:GetName() .. "High"):SetText("1.0")
-    getglobal(control:GetName() .. "Text"):SetText(title)
-    return control
-end
-
-
-function nms_Options:CreateEditBox(name, parent, title, width, height, onEnterCallback)
-    local control = CreateFrame("EditBox", "nms_" .. name, parent)
-    control.title_text = self:CreateLabel(control, title, 12)
-    control.title_text:SetPoint("TOP", 0, 12)
-    control:SetBackdrop({
-        bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-        tile = true,
-        tileSize = 26,
-        edgeSize = 16,
-        insets = { left = 4, right = 4, top = 4, bottom = 4}
-    })
-    control:SetBackdropColor(0,0,0,1)
-    control:SetSize(width, height)
-    control:SetMultiLine(false)
-    control:SetAutoFocus(false)
-    control:SetMaxLetters(6)
-    control:SetJustifyH("CENTER")
-    control:SetJustifyV("CENTER")
-    control:SetFontObject(GameFontNormal)
-    control:SetText("")
-    control:SetScript("OnEnterPressed", function(self)
-        onEnterCallback(self)
-        self:ClearFocus()
-    end)
-    control:SetScript("OnEscapePressed", function(self)
-        self:ClearFocus()
-    end)
-    return control
 end

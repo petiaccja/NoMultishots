@@ -75,7 +75,7 @@ function nms_CombatLogTracker:Update()
         warningState = NMS_WARNING_NEARBY
     end
     if self.callback ~= nil then
-        self.callback(warningState, NMS_EFFECT_POLYMORPH)
+        self.callback(warningState, NMS_EFFECT_POLYMORPH, nms_Main:TableSize(trackedUnits), 0)
     end
 end
 
