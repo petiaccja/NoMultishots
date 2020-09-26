@@ -98,6 +98,7 @@ function nms_WarningFrame:SetOptions(options)
     local largeFontSize = options.size * 0.18
     local shadowOffsetX = smallFontSize * 0.12
     local shadowOffsetY = -smallFontSize * 0.07
+    local largeFontSize = math.max(12, largeFontSize)
     frame.labelPolyCount:SetFont("Fonts/FRIZQT__.ttf", smallFontSize)
     frame.labelTotalCount:SetFont("Fonts/FRIZQT__.ttf", largeFontSize)
     frame.labelFriendCount:SetFont("Fonts/FRIZQT__.ttf", smallFontSize)
@@ -112,6 +113,10 @@ function nms_WarningFrame:SetOptions(options)
     else        
         frame.labelPolyCount:Hide()
         frame.labelTotalCount:Hide()
+        frame.labelFriendCount:Hide()
+    end
+    if smallFontSize < 12 then
+        frame.labelPolyCount:Hide()
         frame.labelFriendCount:Hide()
     end
     self:AlignCounters(frame, options.countAlignment)
@@ -167,19 +172,16 @@ function nms_WarningFrame:SetMoveCallback(callback)
 end
 
 
-function nms_WarningFrame:UpdateDisplay()
-    local state = NMS_WARNING_NONE
-    local effect = NMS_EFFECT_NONE
-
-    -- Select more severe warning.
+function nms_WarningFrame:GetMostImportantState()
     if clogState > unitState then
-        state = clogState
-        effect = clogEffect
+        return clogState, clogEffect
     else
-        state = unitState
-        effect = unitEffect
+        return unitState, unitEffect
     end
+end
 
+
+function nms_WarningFrame:GetIconTexture(state, effect)
     local texturePath
     local textColor
 
@@ -201,6 +203,14 @@ function nms_WarningFrame:UpdateDisplay()
             texturePath = texFileBlockPoly
         end
     end
+    return texturePath, textColor
+end
+
+
+function nms_WarningFrame:UpdateDisplay()
+    local state, effect = self:GetMostImportantState()
+    local texturePath, textColor = self:GetIconTexture(state, effect)
+
     frame.icon.texture:SetTexture(texturePath)
     frame.labelPolyCount:SetTextColor(textColor.r, textColor.g, textColor.b, frame.icon:GetAlpha())
     frame.labelTotalCount:SetTextColor(textColor.r, textColor.g, textColor.b, frame.icon:GetAlpha())
@@ -210,7 +220,7 @@ function nms_WarningFrame:UpdateDisplay()
     frame.labelTotalCount:SetText(tostring(numPolymorphed + numAttackable))
     frame.labelFriendCount:SetText(tostring(numAttackable))
 
-    if state ~= NMS_WARNING_NONE then
+    if state ~= NMS_WARNING_NONE or self.movable then
         frame:Show()
         frame.icon:Show()
     elseif not self.movable then
