@@ -30,4 +30,4 @@ The WoW API does not make it possible to know with perfect accuracy if your Mult
 
 Development status
 ---
-The AddOn is in alpha phase. It provides useful information and works properly, however, it lacks many settings and features, and may contain some bugs, especially for classes other than Hunters. I would like to see if there is interest for development and get feedback on what features to add. So by all means, give it a try.
+The AddOn is in alpha phase. It provides useful information and works properly, however, it lacks many settings and features, and may contain some bugs, especially for classes other than Hunters. I would like to see if there is interest for development and get feedback on what features to add. So by all means, give it a try, and write an issue on CurseForge or GitHub.
