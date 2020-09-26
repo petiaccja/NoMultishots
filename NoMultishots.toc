@@ -3,6 +3,7 @@
 ## Notes: Want to "accidentally" break polymorph or kill a teammate? Good, now you know exactly when.
 ## SavedVariables: g_noMultishotsConfig
 ## Version: 1.0
+Interface.lua
 Data.lua
 WarningFrame.lua
 CombatLogTracker.lua

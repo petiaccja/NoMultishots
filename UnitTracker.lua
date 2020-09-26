@@ -20,30 +20,34 @@ end
 
 
 function nms_UnitTracker:IsRaidMemberAttackable()
-    local isAnyAttackable = false
+    local numAttackable = 0
     local isAnyInRange = false
     for i=1,40 do
         local unitId = "raid" .. i
         local isAttackable = UnitCanAttack("player",unitId)
         local isInRange = nms_Main:IsUnitInSpellRange(unitId)
-        isAnyAttackable = isAnyAttackable or isAttackable
+        if isAttackable then
+            numAttackable = numAttackable + 1
+        end
         isAnyInRange = isAnyInRange or isInRange
     end
-    return isAnyAttackable, isAnyInRange
+    return numAttackable, isAnyInRange
 end
 
 
 function nms_UnitTracker:IsPartyMemberAttackable()
-    local isAnyAttackable = false
+    local numAttackable = 0
     local isAnyInRange = false
     for i=1,4 do
         local unitId = "party" .. i
         local isAttackable = UnitCanAttack("player",unitId)
         local isInRange = nms_Main:IsUnitInSpellRange(unitId)
-        isAnyAttackable = isAnyAttackable or isAttackable
+        if isAttackable then
+            numAttackable = numAttackable + 1
+        end
         isAnyInRange = isAnyInRange or isInRange
     end
-    return isAnyAttackable, isAnyInRange
+    return numAttackable, isAnyInRange
 end
 
 
@@ -69,12 +73,12 @@ end
 
 function nms_UnitTracker:Update()
     local isTargetPolymorphed = nms_UnitTracker:IsTargetPolymorphed()
-    local isPartyAttackable, isPartyInRange = nms_UnitTracker:IsPartyMemberAttackable()
-    local isRaidAttackable, isRaidInRange = nms_UnitTracker:IsRaidMemberAttackable()
+    local numPartyAttackable, isPartyInRange = nms_UnitTracker:IsPartyMemberAttackable()
+    local numRaidAttackable, isRaidInRange = nms_UnitTracker:IsRaidMemberAttackable()
 
-    -- Merge raid and party status.
-    isRaidAttackable = isRaidAttackable or isPartyAttackable
-    isRaidInRange = isRaidInRange or isPartyInRange
+    local numPolymorphed = (function() if isTargetPolymorphed then return 1 else return 0 end end)()
+    local numAttackable = math.max(numPartyAttackable, numRaidAttackable)
+    local inRange = isRaidInRange or isPartyInRange
 
     local warningState = NMS_WARNING_NONE
     local warningEffect = NMS_EFFECT_NONE
@@ -83,7 +87,7 @@ function nms_UnitTracker:Update()
         warningState = NMS_WARNING_TARGET
         warningEffect = NMS_EFFECT_POLYMORPH
     end
-    if isRaidAttackable then
+    if numAttackable > 0 then
         warningEffect = NMS_EFFECT_FRIENDLY_FIRE
         if isRaidInRange then
             warningState = NMS_WARNING_IN_RANGE
@@ -93,7 +97,7 @@ function nms_UnitTracker:Update()
     end
 
     if self.callback ~= nil then
-        self.callback(warningState, warningEffect)
+        self.callback(warningState, warningEffect, numPolymorphed, numAttackable)
     end
 end
 

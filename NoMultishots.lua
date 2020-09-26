@@ -45,4 +45,12 @@ function nms_Main:IsUnitInSpellRange(unit)
 end
 
 
+function nms_Main:TableSize(table)
+    local count = 0
+    for k,v in pairs(table) do
+        count = count + 1
+    end
+    return count    
+end
+
 nms_Main:Init()
