@@ -1,3 +1,5 @@
+package-as: NoMultishots-@project-version@
+
 ignore: # Files and directories beginning with a dot (such as .git) are automatically ignored, as is the pgkmeta file itself.
     - images_src
     - docs
