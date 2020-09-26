@@ -10,12 +10,20 @@ local numAttackable = 0
 local frame = nil
 local frameMovable = false
 local clearButtonModifier = "ALT"
+local showOptions = {
+    ["enableFrame"] = true,
+    ["showAlone"] = true,
+    ["showInParty"] = true,
+    ["showInRaid"] = true,
+    ["showInBattleground"] = true,
+    ["showOnlyInstance"] = false,
+}
 
 local texFileWarnPoly = "Interface/Addons/NoMultishots/images/warn_sheep.blp"
 local texFileWarnFF = "Interface/Addons/NoMultishots/images/warn_friend.blp"
 local texFileBlockPoly = "Interface/Addons/NoMultishots/images/block_sheep.blp"
 local texFileBlockFF = "Interface/Addons/NoMultishots/images/block_friend.blp"
-local texChecker = "Interface/Addons/NoMultishots/images/checker.blp"
+local texChecker = "Interface/Addons/NoMultishots/images/move_placeholder.blp"
 
 local colorIdle = {["r"] = 255/255, ["g"] = 255/255, ["b"] = 255/255}
 local colorWarning = {["r"] = 255/255, ["g"] = 240/255, ["b"] = 0/255}
@@ -142,9 +150,14 @@ function nms_WarningFrame:SetOptions(options)
     frame.clearButton:SetSize(clearButtonSize, clearButtonSize)
     frame.clearButton:SetAlpha(options.alpha)
 
-    if frameMovable then
-        frame:Show()
-    end
+    showOptions.enableFrame = options.enableFrame
+    showOptions.showAlone = options.showAlone
+    showOptions.showInParty = options.showInParty
+    showOptions.showInRaid = options.showInRaid
+    showOptions.showInBattleground = options.showInBattleground
+    showOptions.showOnlyInstance = options.showOnlyInstance
+
+    self:UpdateDisplay()
 end
 
 
@@ -228,6 +241,38 @@ function nms_WarningFrame:GetIconTexture(state, effect)
 end
 
 
+function nms_WarningFrame:IsShown()
+    -- showOptions.enableFrame
+    -- showOptions.showAlone
+    -- showOptions.showInParty
+    -- showOptions.showInRaid
+    -- showOptions.showInBattleground
+    -- showOptions.showOnlyInstance
+
+    local isInInstance, instanceType = IsInInstance()
+    local isInBattleground = instanceType == "pvp" or instanceType == "arena"
+    local isInParty = UnitPlayerOrPetInParty("player") and not UnitPlayerOrPetInRaid("player")
+    local isInRaid = UnitPlayerOrPetInRaid("player")
+    local isAlone = not isInParty and not isInRaid and not isInBattleground
+
+    if not showOptions.enableFrame then
+        return false
+    end
+    if (showOptions.showOnlyInstance and not isInInstance) then
+        return false
+    end
+
+    if (isAlone and showOptions.showAlone) 
+        or (isInParty and showOptions.showInParty)
+        or (isInRaid and showOptions.showInRaid)
+        or (isInBattleground and showOptions.showInBattleground)
+        then
+        return true
+    end
+    return false
+end
+
+
 function nms_WarningFrame:ClearWarnings()
     local perform = (clearButtonModifier == "ALT" and IsAltKeyDown())
         or (clearButtonModifier == "SHIFT" and IsShiftKeyDown())
@@ -252,10 +297,10 @@ function nms_WarningFrame:UpdateDisplay()
     frame.labelTotalCount:SetText(tostring(numPolymorphed + numAttackable))
     frame.labelFriendCount:SetText(tostring(numAttackable))
 
-    if state ~= NMS_WARNING_NONE or frameMovable then
+    if (state ~= NMS_WARNING_NONE and self:IsShown()) or frameMovable then
         frame:Show()
         frame.icon:Show()
-    elseif not frameMovable then
+    else
         frame:Hide()
         frame.icon:Hide()
     end
