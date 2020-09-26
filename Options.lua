@@ -48,6 +48,16 @@ function nms_Options:Defaults()
     options.size = 128
     options.showCounts = true
     options.countAlignment = "BOTTOM"
+    options.showClearButton = true
+    options.clearButtonModifier = "ALT"
+
+    options.enableFrame = true
+    options.showAlone = true
+    options.showInParty = true
+    options.showInRaid = true
+    options.showInBattleground = true
+    options.showOnlyInstance = false
+
     return options
 end
 
@@ -83,6 +93,18 @@ function nms_Options:WritePanel(options)
     local alignStr = string.lower(options.countAlignment)
     alignStr = alignStr:sub(1,1):upper() .. alignStr:sub(2)
     UIDropDownMenu_SetText(self.panel.countAlignment, alignStr)
+
+    self.panel.showClearButton:SetChecked(options.showClearButton)
+    local alignStr = string.lower(options.clearButtonModifier)
+    alignStr = alignStr:sub(1,1):upper() .. alignStr:sub(2)
+    UIDropDownMenu_SetText(self.panel.clearButtonModifier, alignStr)
+
+    self.panel.enableFrame:SetChecked(options.enableFrame)
+    self.panel.showAlone:SetChecked(options.showAlone)
+    self.panel.showInParty:SetChecked(options.showInParty)
+    self.panel.showInRaid:SetChecked(options.showInRaid)
+    self.panel.showInBattleground:SetChecked(options.showInBattleground)
+    self.panel.showOnlyInstance:SetChecked(options.showOnlyInstance)
 end
 
 
@@ -95,6 +117,15 @@ function nms_Options:ReadPanel()
     options.size = self.panel.size:GetNumber()
     options.showCounts = self.panel.showCounts:GetChecked()
     options.countAlignment = string.upper(UIDropDownMenu_GetText(self.panel.countAlignment))
+    options.showClearButton = self.panel.showClearButton:GetChecked()
+    options.clearButtonModifier = string.upper(UIDropDownMenu_GetText(self.panel.clearButtonModifier))
+
+    options.enableFrame = self.panel.enableFrame:GetChecked()
+    options.showAlone = self.panel.showAlone:GetChecked()
+    options.showInParty = self.panel.showInParty:GetChecked()
+    options.showInRaid = self.panel.showInRaid:GetChecked()
+    options.showInBattleground = self.panel.showInBattleground:GetChecked()
+    options.showOnlyInstance = self.panel.showOnlyInstance:GetChecked()
     return options
 end
 
@@ -123,11 +154,24 @@ function nms_Options:CreatePanel()
     panel.labelSize = nms_Interface:CreateLabel(panel.frame, "Frame size:", 12)
     panel.size = nms_Interface:CreateEditBox("EditSize", panel.frame, "", 60, 25, function () self:Update() end)
 
-    panel.showCounts = nms_Interface:CreateCheckButton("ShowCounts", panel.frame, "Show number of hazards")
+    panel.showCounts = nms_Interface:CreateCheckButton("ShowCounts", panel.frame, "Show number of hazards", "The number of polymorphed and friendly fire targets are displayed as text next to the warning icon.")
     panel.countAlignment = nms_Interface:CreateDropdownMenu("CountAlignment", panel.frame, 85, 25, {"Bottom", "Top", "Left", "Right"}, function (info, control, key, checked)
         UIDropDownMenu_SetSelectedValue(control, info.value, info.value)
         self:Update()
     end)
+
+    panel.showClearButton = nms_Interface:CreateCheckButton("ShowClearButton", panel.frame, "Show clear button", "Lets you clear the sources of current warnings. May be useful when you run far away from the combat area.")
+    panel.clearButtonModifier = nms_Interface:CreateDropdownMenu("ClearButtonModifier", panel.frame, 85, 25, {"None", "Shift", "Control", "Alt"}, function (info, control, key, checked)
+        UIDropDownMenu_SetSelectedValue(control, info.value, info.value)
+        self:Update()
+    end)
+    
+    panel.enableFrame = nms_Interface:CreateCheckButton("EnableFrame", panel.frame, "Enable warning frame")
+    panel.showAlone = nms_Interface:CreateCheckButton("ShowAlone", panel.frame, "Show when alone")
+    panel.showInParty = nms_Interface:CreateCheckButton("ShowInParty", panel.frame, "Show when in party")
+    panel.showInRaid = nms_Interface:CreateCheckButton("ShowInRaid", panel.frame, "Show when in raid")
+    panel.showInBattleground = nms_Interface:CreateCheckButton("ShowInBattleground", panel.frame, "Show when in battlegrounds")
+    panel.showOnlyInstance = nms_Interface:CreateCheckButton("ShowOnlyInstance", panel.frame, "Show only within instances")
     
     panel.enableMove:SetPoint("TOPLEFT", panel.frame, "TOPLEFT", 15, -15)
     panel.alphaSlider:SetPoint("TOPLEFT", panel.enableMove, "BOTTOMLEFT", 0, -15)
@@ -139,6 +183,15 @@ function nms_Options:CreatePanel()
     panel.size:SetPoint("LEFT", panel.labelSize, "RIGHT", 10, 0)
     panel.showCounts:SetPoint("TOPLEFT", panel.labelSize, "BOTTOMLEFT", 0, -15)
     panel.countAlignment:SetPoint("LEFT", panel.showCounts, "RIGHT", 135, 0)
+    panel.showClearButton:SetPoint("TOPLEFT", panel.showCounts, "BOTTOMLEFT", 0, -5)
+    panel.clearButtonModifier:SetPoint("LEFT", panel.showClearButton, "RIGHT", 135, 0)
+
+    panel.enableFrame:SetPoint("TOPLEFT", panel.showClearButton, "BOTTOMLEFT", 0, -5)
+    panel.showAlone:SetPoint("TOPLEFT", panel.enableFrame, "BOTTOMLEFT", 20, 0)
+    panel.showInParty:SetPoint("TOPLEFT", panel.showAlone, "BOTTOMLEFT", 0, 0)
+    panel.showInRaid:SetPoint("TOPLEFT", panel.showInParty, "BOTTOMLEFT", 0, 0)
+    panel.showInBattleground:SetPoint("TOPLEFT", panel.showInRaid, "BOTTOMLEFT", 0, 0)
+    panel.showOnlyInstance:SetPoint("TOPLEFT", panel.showInBattleground, "BOTTOMLEFT", 0, 0)
 
     panel.coordX:SetNumeric()
     panel.coordY:SetNumeric()
@@ -154,6 +207,14 @@ function nms_Options:RegisterUpdateTriggers()
     self.panel.enableMove:SetScript("OnClick", function () self:Update() end)
     self.panel.alphaSlider:SetScript("OnMouseUp", function () self:Update() end)
     self.panel.showCounts:SetScript("OnClick", function () self:Update() end)
+    self.panel.showClearButton:SetScript("OnClick", function () self:Update() end)
+
+    self.panel.enableFrame:SetScript("OnClick", function () self:Update() end)
+    self.panel.showAlone:SetScript("OnClick", function () self:Update() end)
+    self.panel.showInParty:SetScript("OnClick", function () self:Update() end)
+    self.panel.showInRaid:SetScript("OnClick", function () self:Update() end)
+    self.panel.showInBattleground:SetScript("OnClick", function () self:Update() end)
+    self.panel.showOnlyInstance:SetScript("OnClick", function () self:Update() end)
 end
 
 

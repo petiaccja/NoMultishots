@@ -8,6 +8,8 @@ local unitEffect = NMS_EFFECT_NONE
 local numPolymorphed = 0
 local numAttackable = 0
 local frame = nil
+local frameMovable = false
+local clearButtonModifier = "ALT"
 
 local texFileWarnPoly = "Interface/Addons/NoMultishots/images/warn_sheep.blp"
 local texFileWarnFF = "Interface/Addons/NoMultishots/images/warn_friend.blp"
@@ -18,6 +20,7 @@ local texChecker = "Interface/Addons/NoMultishots/images/checker.blp"
 local colorIdle = {["r"] = 255/255, ["g"] = 255/255, ["b"] = 255/255}
 local colorWarning = {["r"] = 255/255, ["g"] = 240/255, ["b"] = 0/255}
 local colorBlock = {["r"] = 255/255, ["g"] = 0/255, ["b"] = 0/255}
+
 
 function nms_WarningFrame:Init()
     frame = self:CreateFrame()
@@ -46,6 +49,14 @@ function nms_WarningFrame:CreateFrame()
     frame.labelPolyCount:SetShadowColor(0, 0, 0)
     frame.labelTotalCount:SetShadowColor(0, 0, 0)
     frame.labelFriendCount:SetShadowColor(0, 0, 0)
+
+    frame.clearButton = CreateFrame("Button", "nms_WarningFrame_HideButton", frame)
+    frame.clearButton:SetSize(25, 25)
+    frame.clearButton:SetNormalTexture("interface/buttons/arrow-down-up.blp")
+    frame.clearButton:SetHighlightTexture("interface/buttons/arrow-down-up.blp")
+    frame.clearButton:SetPushedTexture("interface/buttons/arrow-down-down.blp")
+    frame.clearButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT")
+    frame.clearButton:SetScript("OnClick", function () self:ClearWarnings() end)
 
     return frame
 end
@@ -84,7 +95,7 @@ end
 
 function nms_WarningFrame:SetOptions(options)
     self:SetMovable(options.enableMove)
-    self.movable = options.enableMove
+    frameMovable = options.enableMove
 
     frame:SetSize(options.size, options.size)
     frame:ClearAllPoints()
@@ -121,7 +132,17 @@ function nms_WarningFrame:SetOptions(options)
     end
     self:AlignCounters(frame, options.countAlignment)
 
-    if self.movable then
+    if options.showClearButton then
+        frame.clearButton:Show()
+    else
+        frame.clearButton:Hide()
+    end
+    clearButtonModifier = options.clearButtonModifier
+    local clearButtonSize = math.max(12, math.min(30, options.size * 0.18))
+    frame.clearButton:SetSize(clearButtonSize, clearButtonSize)
+    frame.clearButton:SetAlpha(options.alpha)
+
+    if frameMovable then
         frame:Show()
     end
 end
@@ -207,6 +228,17 @@ function nms_WarningFrame:GetIconTexture(state, effect)
 end
 
 
+function nms_WarningFrame:ClearWarnings()
+    local perform = (clearButtonModifier == "ALT" and IsAltKeyDown())
+        or (clearButtonModifier == "SHIFT" and IsShiftKeyDown())
+        or (clearButtonModifier == "CONTROL" and IsControlKeyDown())
+        or (clearButtonModifier == "NONE")
+    if perform then
+        nms_CombatLogTracker:Clear()
+    end
+end
+
+
 function nms_WarningFrame:UpdateDisplay()
     local state, effect = self:GetMostImportantState()
     local texturePath, textColor = self:GetIconTexture(state, effect)
@@ -220,10 +252,10 @@ function nms_WarningFrame:UpdateDisplay()
     frame.labelTotalCount:SetText(tostring(numPolymorphed + numAttackable))
     frame.labelFriendCount:SetText(tostring(numAttackable))
 
-    if state ~= NMS_WARNING_NONE or self.movable then
+    if state ~= NMS_WARNING_NONE or frameMovable then
         frame:Show()
         frame.icon:Show()
-    elseif not self.movable then
+    elseif not frameMovable then
         frame:Hide()
         frame.icon:Hide()
     end

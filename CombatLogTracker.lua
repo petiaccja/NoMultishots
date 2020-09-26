@@ -80,6 +80,12 @@ function nms_CombatLogTracker:Update()
 end
 
 
+function nms_CombatLogTracker:Clear()
+    trackedUnits = {}
+    self:Update()
+end
+
+
 function eventHandlers:COMBAT_LOG_EVENT_UNFILTERED()
     local timestamp, event, hiding, sourceGUID, sourceName, sourceFlags, sourceFlags2, destGUID, destName, destFlags, destFlags2, spellID, spellName, spellSchool,
           sp1, sp2, sp3, sp4, sp5, sp6, sp7, sp8, sp9 
